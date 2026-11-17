@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Música · Graduación Promo 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bordo: #8a1c3f; --bordo-osc: #6d1431; --gris: #6f6a66; --linea: #d9d2cc; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: transparent; }
+  body { display: flex; align-items: center; justify-content: center; padding: 8px 12px;
+         font-family: 'Cormorant Garamond', Georgia, serif; color: var(--gris); }
+  .player { width: 100%; max-width: 520px; display: flex; align-items: center; gap: 14px;
+            padding: 8px 18px 8px 8px; border-radius: 999px;
+            background: rgba(255, 255, 255, .78); box-shadow: 0 6px 22px rgba(70, 30, 40, .14), inset 0 0 0 1px rgba(138, 28, 63, .12);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  button { flex-shrink: 0; width: 52px; height: 52px; border: 0; border-radius: 50%; cursor: pointer;
+           background: var(--bordo); color: #fff; display: flex; align-items: center; justify-content: center;
+           box-shadow: 0 4px 12px rgba(138, 28, 63, .35); transition: transform .15s, background .15s; }
+  button:hover { background: var(--bordo-osc); }
+  button:active { transform: scale(.94); }
+  button:focus-visible { outline: 3px solid rgba(138, 28, 63, .35); outline-offset: 3px; }
+  .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .titulo { font-size: 19px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--bordo);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tiempo { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .barras { display: flex; align-items: flex-end; gap: 3px; height: 16px; }
+  .barras i { width: 3px; height: 30%; border-radius: 2px; background: var(--bordo); opacity: .55; }
+  .sonando .barras i { animation: sube 1s ease-in-out infinite; opacity: 1; }
+  .barras i:nth-child(2) { animation-delay: -.6s; } .barras i:nth-child(3) { animation-delay: -.3s; }
+  .barras i:nth-child(4) { animation-delay: -.8s; }
+  @keyframes sube { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+  .pista { position: relative; height: 4px; border-radius: 4px; background: var(--linea); cursor: pointer; }
+  .pista::before { content: ""; position: absolute; inset: -8px 0; }
+  .avance { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 4px; background: var(--bordo); }
+  @media (prefers-reduced-motion: reduce) { .sonando .barras i { animation: none; } }
+  @media (max-width: 360px) { .titulo { font-size: 16px; letter-spacing: 1px; } }
+</style>
+</head>
+<body>
+  <div class="player" id="player">
+    <button id="boton" type="button" aria-label="Reproducir la música">
+      <svg id="icono" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+    </button>
+    <div class="info">
+      <div class="fila">
+        <span class="titulo">Dale play a la música</span>
+        <span class="barras" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      </div>
+      <div class="fila">
+        <div class="pista" id="pista" style="flex: 1" role="slider" aria-label="Avance de la canción" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><div class="avance" id="avance"></div></div>
+        <span class="tiempo" id="tiempo">0:00 / 3:54</span>
+      </div>
+    </div>
+  </div>
+  <audio id="audio" src="musica.mp3" preload="metadata" loop></audio>
+<script>
+  const audio = document.getElementById('audio');
+  const boton = document.getElementById('boton');
+  const icono = document.getElementById('icono');
+  const player = document.getElementById('player');
+  const pista = document.getElementById('pista');
+  const avance = document.getElementById('avance');
+  const tiempo = document.getElementById('tiempo');
+  const PLAY = '<path d="M8 5.5v13l11-6.5z"/>';
+  const PAUSA = '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
+  const mmss = (s) => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+  boton.addEventListener('click', () => { audio.paused ? audio.play() : audio.pause(); });
+  audio.addEventListener('play', () => { icono.innerHTML = PAUSA; boton.setAttribute('aria-label', 'Pausar la música'); player.classList.add('sonando'); });
+  audio.addEventListener('pause', () => { icono.innerHTML = PLAY; boton.setAttribute('aria-label', 'Reproducir la música'); player.classList.remove('sonando'); });
+  const pintar = () => {
+    const d = audio.duration || 0, t = audio.currentTime || 0;
+    avance.style.width = d ? (t / d * 100) + '%' : '0';
+    pista.setAttribute('aria-valuenow', d ? Math.round(t / d * 100) : 0);
+    tiempo.textContent = mmss(t) + ' / ' + mmss(d || 234);
+  };
+  audio.addEventListener('timeupdate', pintar);
+  audio.addEventListener('loadedmetadata', pintar);
+  pista.addEventListener('click', (e) => {
+    const r = pista.getBoundingClientRect();
+    if (audio.duration) audio.currentTime = (e.clientX - r.left) / r.width * audio.duration;
+  });
+  pista.addEventListener('keydown', (e) => {
+    if (!audio.duration) return;
+    if (e.key === 'ArrowRight') audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+    if (e.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
+  });
+</script>
+</body>
+</html>
